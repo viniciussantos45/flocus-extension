@@ -48,14 +48,14 @@ function BlockContentPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-black text-amber-500 flex items-center justify-center p-8">
+    <div className="min-h-screen w-full bg-background flex items-center justify-center p-8">
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
         {/* Left Box - Empty decorative */}
-        <div className="hidden lg:block border-2 border-pink-500 rounded-3xl h-96"></div>
+        <div className="hidden lg:block border-2 border-primary rounded-3xl h-96"></div>
 
         {/* Center Content */}
         <div className="flex flex-col items-center justify-center space-y-8">
-          <p className="text-xl lg:text-2xl text-center font-light leading-relaxed px-4">
+          <p className="text-xl lg:text-2xl text-center font-light leading-relaxed px-4 text-foreground">
             {randomMessage}
           </p>
 
@@ -63,7 +63,7 @@ function BlockContentPage() {
             <Button
               onClick={handleAccessWithReason}
               variant="outline"
-              className="border-2 border-amber-500 bg-transparent text-amber-500 hover:bg-amber-500 hover:text-black px-8 py-6 rounded-2xl text-lg font-normal">
+              className="border-2 border-accent bg-transparent text-accent hover:bg-accent hover:text-accent-foreground px-8 py-6 rounded-2xl text-lg font-normal">
               Quero acessar com motivo
             </Button>
           ) : (
@@ -72,19 +72,19 @@ function BlockContentPage() {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Por que você precisa acessar este site agora?"
-                className="w-full bg-transparent border-2 border-amber-500 rounded-2xl p-4 text-amber-500 placeholder:text-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-32 resize-none"
+                className="w-full bg-transparent border-2 border-accent rounded-2xl p-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent min-h-32 resize-none"
               />
               <div className="flex gap-3">
                 <Button
                   onClick={() => setShowReasonInput(false)}
                   variant="outline"
-                  className="flex-1 border-2 border-amber-500/50 bg-transparent text-amber-500/50 hover:bg-amber-500/10 rounded-2xl">
+                  className="flex-1 border-2 border-muted bg-transparent text-muted-foreground hover:bg-muted rounded-2xl">
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleSubmitReason}
                   variant="outline"
-                  className="flex-1 border-2 border-amber-500 bg-transparent text-amber-500 hover:bg-amber-500 hover:text-black rounded-2xl">
+                  className="flex-1 border-2 border-accent bg-transparent text-accent hover:bg-accent hover:text-accent-foreground rounded-2xl">
                   Enviar
                 </Button>
               </div>
@@ -93,15 +93,15 @@ function BlockContentPage() {
         </div>
 
         {/* Right Box - Incentives */}
-        <div className="border-2 border-pink-500 rounded-3xl h-96 flex items-center justify-center p-8">
+        <div className="border-2 border-primary rounded-3xl h-96 flex items-center justify-center p-8">
           <div className="text-center space-y-6">
-            <p className="text-pink-500 text-lg lg:text-xl font-light">
+            <p className="text-primary text-lg lg:text-xl font-light">
               Imagens ou incentivos para
               <br />
               evitar o acesso
             </p>
             <div className="text-6xl">{randomIncentive.split(" ")[0]}</div>
-            <p className="text-pink-500/80 text-base">
+            <p className="text-primary/80 text-base">
               {randomIncentive.split(" ").slice(1).join(" ")}
             </p>
           </div>
