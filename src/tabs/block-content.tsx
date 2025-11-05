@@ -1,10 +1,8 @@
 import "~/src/global.css"
 
-import { Button } from "~src/components/ui/button"
 import {
   Card,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "~src/components/ui/card"
@@ -14,17 +12,14 @@ function BlockContentPage() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>This site is blocked</CardTitle>
+        <CardTitle>You cannot access this site right now.</CardTitle>
         <CardDescription>
-          You have attempted to access a blocked site.
+          We are working to restore your mind. Prevent you from consuming cheap
+          dopamine.
         </CardDescription>
       </CardHeader>
 
       {/* <CardContent>Blocked content</CardContent> */}
-
-      <CardFooter>
-        <Button>Go Back</Button>
-      </CardFooter>
     </Card>
   )
 }
