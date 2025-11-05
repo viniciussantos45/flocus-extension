@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+
+import { Storage } from "@plasmohq/storage"
 
 import "~/src/global.css"
 
@@ -8,13 +10,16 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "~src/components/ui/card"
 import { Label } from "~src/components/ui/label"
 import { Separator } from "~src/components/ui/separator"
 import { Textarea } from "~src/components/ui/textarea"
+
+const storage = new Storage({
+  area: "local"
+})
 
 // Access using: chrome-extension://[id]/tabs/block-content.html
 function BlockContentPage() {
@@ -25,16 +30,21 @@ function BlockContentPage() {
 
   useEffect(() => {
     // Track time since page loaded
-    // const timer = setInterval(() => {
-    //   setBlockedTime((prev) => prev + 1)
-    // }, 1000)
-    // // Load today's block count
-    // chrome.storage.local.get(["todayBlocks"], (result) => {
-    //   const newCount = (result.todayBlocks || 0) + 1
-    //   setTodayBlocks(newCount)
-    //   chrome.storage.local.set({ todayBlocks: newCount })
-    // })
-    // return () => clearInterval(timer)
+    const timer = setInterval(() => {
+      setBlockedTime((prev) => prev + 1)
+    }, 1000)
+
+    // Load and increment today's block count
+    const loadBlockCount = async () => {
+      const currentCount = await storage.get<number>("todayBlocks")
+      const newCount = (currentCount || 0) + 1
+      setTodayBlocks(newCount)
+      await storage.set("todayBlocks", newCount)
+    }
+
+    loadBlockCount()
+
+    return () => clearInterval(timer)
   }, [])
 
   const motivationalMessages = [
@@ -73,13 +83,15 @@ function BlockContentPage() {
     }
   ]
 
-  const randomMessage =
-    motivationalMessages[
+  const randomMessage = useMemo(() => {
+    return motivationalMessages[
       Math.floor(Math.random() * motivationalMessages.length)
     ]
+  }, [])
 
-  const randomIncentive =
-    incentives[Math.floor(Math.random() * incentives.length)]
+  const randomIncentive = useMemo(() => {
+    return incentives[Math.floor(Math.random() * incentives.length)]
+  }, [])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -102,132 +114,167 @@ function BlockContentPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-background flex items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-stretch">
-        {/* Left Card - Stats */}
-        <Card className="hidden lg:flex flex-col justify-between">
-          <CardHeader>
-            <CardTitle className="text-sm uppercase">Seu Foco Hoje</CardTitle>
-            <div className="flex items-baseline gap-2 pt-2">
-              <span className="text-5xl font-bold text-primary">
+    <div className="min-h-screen w-full bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto px-4 py-12 max-w-5xl">
+        {/* Header Stats */}
+        <div className="flex items-center justify-between mb-12">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">Flocus</h1>
+            <p className="text-sm text-muted-foreground">
+              Protegendo seu foco
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-2xl font-bold text-primary tabular-nums">
                 {todayBlocks}
-              </span>
-              <span className="text-lg text-muted-foreground">
+              </div>
+              <div className="text-xs text-muted-foreground">
                 {todayBlocks === 1 ? "bloqueio" : "bloqueios"}
-              </span>
+              </div>
             </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <Separator />
-
-            <div className="space-y-2">
-              <p className="text-sm uppercase">Tempo Salvo</p>
-              <div className="text-3xl font-bold text-accent font-mono">
+            <Separator orientation="vertical" className="h-10" />
+            <div className="text-right">
+              <div className="text-2xl font-bold text-accent tabular-nums font-mono">
                 {formatTime(blockedTime)}
               </div>
-              <p className="text-xs text-muted-foreground">
-                desde este bloqueio
-              </p>
+              <div className="text-xs text-muted-foreground">tempo salvo</div>
             </div>
-          </CardContent>
+          </div>
+        </div>
 
-          <CardFooter>
-            <Badge variant="outline" className="w-full justify-center">
-              Continue focado!
-            </Badge>
-          </CardFooter>
-        </Card>
-
-        {/* Center Card - Main Content */}
-        <Card className="flex flex-col items-center justify-center border-none shadow-none">
-          <CardHeader className="space-y-8 items-center">
-            <div className="space-y-4 max-w-md text-center">
-              <CardTitle className="text-2xl md:text-3xl lg:text-4xl">
-                Site Bloqueado
-              </CardTitle>
-              <CardDescription className="text-base md:text-lg">
-                {randomMessage}
-              </CardDescription>
-            </div>
-          </CardHeader>
-
-          <CardContent className="w-full max-w-md">
-            {!showReasonInput ? (
-              <div className="space-y-4">
-                <Button
-                  onClick={handleAccessWithReason}
-                  variant="outline"
-                  size="lg"
-                  className="w-full">
-                  Quero acessar com motivo
-                </Button>
-
-                {/* Mobile stats */}
-                <div className="lg:hidden flex items-center gap-6 text-sm text-muted-foreground justify-center pt-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-primary">
-                      {todayBlocks}
-                    </span>
-                    <span>bloqueios hoje</span>
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          {/* Left: Block Message */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      className="w-6 h-6 text-primary">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                      />
+                    </svg>
                   </div>
-                  <Separator orientation="vertical" className="h-6" />
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl font-mono font-bold text-accent">
-                      {formatTime(blockedTime)}
-                    </span>
-                    <span>salvo</span>
+                  <div>
+                    <Badge variant="secondary" className="mb-2">
+                      Bloqueado
+                    </Badge>
+                    <CardTitle className="text-2xl">
+                      Site Bloqueado
+                    </CardTitle>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reason">Justifique seu acesso</Label>
-                  <Textarea
-                    id="reason"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Por que você precisa acessar este site agora?"
-                    className="min-h-32 resize-none"
-                    autoFocus
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Mínimo 10 caracteres • {reason.length}/10
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => setShowReasonInput(false)}
-                    variant="outline"
-                    className="flex-1">
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSubmitReason} className="flex-1">
-                    Enviar
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        {/* Right Card - Incentives */}
-        <Card>
-          <CardHeader className="items-center text-center">
-            <div className="text-7xl md:text-8xl pb-4">
-              {randomIncentive.emoji}
-            </div>
-            <CardTitle className="text-xl md:text-2xl">
-              {randomIncentive.title}
-            </CardTitle>
-            <CardDescription className="text-sm md:text-base">
-              {randomIncentive.message}
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="justify-center">
-            <Badge variant="outline">Você consegue!</Badge>
-          </CardFooter>
-        </Card>
+                <CardDescription className="text-base leading-relaxed">
+                  {randomMessage}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Action Card */}
+            <Card>
+              <CardContent className="pt-6">
+                {!showReasonInput ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Precisa acessar este site urgentemente?
+                    </p>
+                    <Button
+                      onClick={handleAccessWithReason}
+                      variant="outline"
+                      size="lg"
+                      className="w-full">
+                      Solicitar acesso com justificativa
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reason">
+                        Por que você precisa acessar agora?
+                      </Label>
+                      <Textarea
+                        id="reason"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        placeholder="Descreva o motivo do acesso..."
+                        rows={4}
+                        autoFocus
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Mínimo 10 caracteres • {reason.length}/10
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => setShowReasonInput(false)}
+                        variant="ghost"
+                        className="flex-1">
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleSubmitReason} className="flex-1">
+                        Enviar justificativa
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right: Motivation */}
+          <div className="lg:sticky lg:top-12 space-y-6">
+            <Card className="overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary" />
+              <CardHeader className="text-center pb-8">
+                <div className="mx-auto mb-4 text-6xl">{randomIncentive.emoji}</div>
+                <CardTitle className="text-3xl mb-3">
+                  {randomIncentive.title}
+                </CardTitle>
+                <CardDescription className="text-base">
+                  {randomIncentive.message}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            {/* Tips Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Dicas de foco</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium mt-0.5">
+                      1
+                    </span>
+                    <span>Faça pausas regulares a cada 25-50 minutos</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium mt-0.5">
+                      2
+                    </span>
+                    <span>Mantenha-se hidratado e com boa postura</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium mt-0.5">
+                      3
+                    </span>
+                    <span>Uma tarefa por vez produz melhores resultados</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
