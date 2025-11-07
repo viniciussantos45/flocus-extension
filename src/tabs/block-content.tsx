@@ -1,3 +1,11 @@
+import {
+  BarbellIcon,
+  BrainIcon,
+  CrosshairIcon,
+  RocketLaunchIcon,
+  TimerIcon,
+  YoutubeLogoIcon
+} from "@phosphor-icons/react"
 import { useEffect, useMemo, useState } from "react"
 
 import { Storage } from "@plasmohq/storage"
@@ -57,27 +65,27 @@ function BlockContentPage() {
 
   const incentives = [
     {
-      emoji: "🎯",
+      emoji: <CrosshairIcon size={32} weight="fill" />,
       title: "Foco total",
       message: "Mantenha-se na zona de produtividade máxima"
     },
     {
-      emoji: "💪",
+      emoji: <BarbellIcon size={32} weight="fill" />,
       title: "Força mental",
       message: "Cada 'não' fortalece sua disciplina"
     },
     {
-      emoji: "🚀",
+      emoji: <RocketLaunchIcon size={32} weight="fill" />,
       title: "Produtividade",
       message: "Seus objetivos estão mais próximos agora"
     },
     {
-      emoji: "⏰",
+      emoji: <TimerIcon size={32} weight="fill" />,
       title: "Tempo é valioso",
       message: "Use cada minuto para o que realmente importa"
     },
     {
-      emoji: "🧠",
+      emoji: <BrainIcon size={32} weight="fill" />,
       title: "Mente clara",
       message: "Sem distrações, apenas resultados"
     }
@@ -149,24 +157,17 @@ function BlockContentPage() {
               <CardHeader>
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      className="w-6 h-6 text-primary">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
-                      />
-                    </svg>
+                    <YoutubeLogoIcon
+                      size={32}
+                      className="text-primary"
+                      weight="fill"
+                    />
                   </div>
                   <div>
                     <Badge variant="secondary" className="mb-2">
                       Bloqueado
                     </Badge>
-                    <CardTitle className="text-2xl">Site Bloqueado</CardTitle>
+                    <CardTitle className="text-2xl">Youtube</CardTitle>
                   </div>
                 </div>
                 <CardDescription className="text-base leading-relaxed">
