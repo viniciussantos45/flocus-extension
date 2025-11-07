@@ -4,7 +4,7 @@ import {
   CrosshairIcon,
   RocketLaunchIcon,
   TimerIcon,
-  YoutubeLogoIcon
+  XIcon
 } from "@phosphor-icons/react"
 import { useEffect, useMemo, useState } from "react"
 
@@ -24,6 +24,9 @@ import {
 import { Label } from "~src/components/ui/label"
 import { Separator } from "~src/components/ui/separator"
 import { Textarea } from "~src/components/ui/textarea"
+import { getDomain } from "~src/libs/utils"
+
+import { sitesInfo, type SitesInfo } from "./sites-info"
 
 const storage = new Storage({
   area: "local"
@@ -54,6 +57,24 @@ function BlockContentPage() {
 
     return () => clearInterval(timer)
   }, [])
+
+  const requestedUrl: string | null = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get("requestedUrl")
+  }, [])
+
+  const requestedDomain: string | null = useMemo(() => {
+    if (!requestedUrl) return null
+    return getDomain(requestedUrl)
+  }, [requestedUrl])
+
+  const siteRequestedInfo: SitesInfo | null = useMemo(() => {
+    if (!requestedDomain) return null
+
+    return sitesInfo[requestedDomain] ?? null
+  }, [requestedDomain])
+
+  console.log("Site Info:", siteRequestedInfo)
 
   const motivationalMessages = [
     "Estamos trabalhando para recuperar sua mente, para você alcançar suas metas...",
@@ -157,17 +178,23 @@ function BlockContentPage() {
               <CardHeader>
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <YoutubeLogoIcon
-                      size={32}
-                      className="text-primary"
-                      weight="fill"
-                    />
+                    {siteRequestedInfo?.icon ? (
+                      <siteRequestedInfo.icon
+                        size={32}
+                        weight="fill"
+                        className="text-primary"
+                      />
+                    ) : (
+                      <XIcon size={32} className="text-primary" />
+                    )}
                   </div>
                   <div>
                     <Badge variant="secondary" className="mb-2">
                       Bloqueado
                     </Badge>
-                    <CardTitle className="text-2xl">Youtube</CardTitle>
+                    <CardTitle className="text-2xl">
+                      {siteRequestedInfo?.name || requestedDomain}
+                    </CardTitle>
                   </div>
                 </div>
                 <CardDescription className="text-base leading-relaxed">

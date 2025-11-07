@@ -3,7 +3,9 @@ const blockedUrls = [
   "facebook.com",
   "twitter.com",
   "instagram.com",
-  "reddit.com"
+  "reddit.com",
+  "gupy.io",
+  "linkedin.com"
 ]
 // Base to check URL trying access
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -12,7 +14,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (blockedUrls.some((blockedUrl) => url!.includes(blockedUrl))) {
       console.log(`Tab URL changed: ${tabId} - New URL: ${url}`)
       // Redirect to block content page
-      const blockPageUrl = chrome.runtime.getURL("tabs/block-content.html")
+      const blockPageUrl = chrome.runtime.getURL(
+        `tabs/block-content.html?requestedUrl=${encodeURIComponent(url)}`
+      )
       chrome.tabs.update(tabId, { url: blockPageUrl })
     }
   } else {
