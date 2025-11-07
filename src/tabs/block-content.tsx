@@ -132,13 +132,72 @@ function BlockContentPage() {
     setShowReasonInput(true)
   }
 
+  const isContentCreationReason = (text: string): boolean => {
+    const trimmed = text.toLowerCase()
+    const contentCreationKeywords = [
+      'criar',
+      'gravar',
+      'postar',
+      'publicar',
+      'editar',
+      'video',
+      'vídeo',
+      'conteudo',
+      'conteúdo',
+      'thumbnail',
+      'upload',
+      'canal',
+      'inscritos',
+      'criar conteúdo',
+      'produzir',
+      'tutorial',
+      'aula',
+      'live',
+      'transmissão',
+      'streaming'
+    ]
+
+    return contentCreationKeywords.some(keyword => trimmed.includes(keyword))
+  }
+
+  const isValidReason = (text: string): boolean => {
+    const trimmed = text.trim()
+
+    // Check minimum length
+    if (trimmed.length < 10) return false
+
+    // Auto-accept if it's about content creation
+    if (isContentCreationReason(text)) return true
+
+    // Check for repeated characters (e.g., "aaaaaaaaaa")
+    const hasRepeatedChars = /(.)\1{5,}/.test(trimmed)
+    if (hasRepeatedChars) return false
+
+    // Check for keyboard patterns (e.g., "asdfasdf", "qwertyqwerty")
+    const keyboardPatterns = ['asdf', 'qwer', 'zxcv', '1234', 'abcd']
+    const hasKeyboardPattern = keyboardPatterns.some(pattern =>
+      trimmed.toLowerCase().includes(pattern.repeat(2))
+    )
+    if (hasKeyboardPattern) return false
+
+    // Check for diverse characters (should have at least 5 different characters)
+    const uniqueChars = new Set(trimmed.toLowerCase().replace(/\s/g, ''))
+    if (uniqueChars.size < 5) return false
+
+    // Check for at least 2 words
+    const words = trimmed.split(/\s+/).filter(w => w.length > 0)
+    if (words.length < 2) return false
+
+    return true
+  }
+
   const handleSubmitReason = () => {
-    if (reason.trim().length > 10) {
+    if (isValidReason(reason)) {
       console.log("Access reason:", reason)
       alert("Acesso temporário concedido. Mantenha o foco!")
       window.history.back()
     } else {
-      alert("Por favor, forneça um motivo válido (mínimo 10 caracteres)")
+      alert("Por favor, forneça um motivo válido e significativo (mínimo 10 caracteres, sem padrões repetitivos)")
     }
   }
 
