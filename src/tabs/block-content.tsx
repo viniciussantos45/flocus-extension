@@ -191,11 +191,26 @@ function BlockContentPage() {
     return true
   }
 
-  const handleSubmitReason = () => {
+  const handleSubmitReason = async () => {
     if (isValidReason(reason)) {
       console.log("Access reason:", reason)
-      alert("Acesso temporário concedido. Mantenha o foco!")
-      window.history.back()
+
+      // Store temporary access with 10-minute expiration
+      if (requestedDomain) {
+        const expirationTime = Date.now() + 10 * 60 * 1000 // 10 minutes from now
+        const tempAccess = await storage.get<Record<string, number>>("temporaryAccess") || {}
+        tempAccess[requestedDomain] = expirationTime
+        await storage.set("temporaryAccess", tempAccess)
+
+        console.log(`Temporary access granted for ${requestedDomain} until ${new Date(expirationTime).toLocaleTimeString()}`)
+      }
+
+      alert("Acesso temporário concedido por 10 minutos. Mantenha o foco!")
+
+      // Redirect to the requested URL
+      if (requestedUrl) {
+        window.location.href = requestedUrl
+      }
     } else {
       alert("Por favor, forneça um motivo válido e significativo (mínimo 10 caracteres, sem padrões repetitivos)")
     }
