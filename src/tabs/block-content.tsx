@@ -192,42 +192,69 @@ function BlockContentPage() {
     return true
   }
 
+  const checkRecentAccess = async (domain: string): Promise<boolean> => {
+    try {
+      const domainHistory = await accessHistoryDB.getEntriesByDomain(domain)
+      const oneHourAgo = Date.now() - 60 * 60 * 1000 // 1 hour ago
+
+      // Check if any access was granted within the last hour
+      const recentAccess = domainHistory.find(
+        (entry) => entry.timestamp > oneHourAgo
+      )
+
+      return !!recentAccess
+    } catch (error) {
+      console.error("Failed to check recent access:", error)
+      return false // Allow access if check fails
+    }
+  }
+
   const handleSubmitReason = async () => {
-    if (isValidReason(reason)) {
-      console.log("Access reason:", reason)
-
-      // Store temporary access with 10-minute expiration
-      if (requestedDomain) {
-        const expirationTime = Date.now() + 10 * 60 * 1000 // 10 minutes from now
-        const tempAccess = await storage.get<Record<string, number>>("temporaryAccess") || {}
-        tempAccess[requestedDomain] = expirationTime
-        await storage.set("temporaryAccess", tempAccess)
-
-        console.log(`Temporary access granted for ${requestedDomain} until ${new Date(expirationTime).toLocaleTimeString()}`)
-
-        // Save to access history in IndexedDB
-        try {
-          await accessHistoryDB.addEntry({
-            domain: requestedDomain,
-            reason: reason.trim(),
-            timestamp: Date.now(),
-            expirationTime,
-            wasContentCreation: isContentCreationReason(reason)
-          })
-          console.log("Access history saved to IndexedDB")
-        } catch (error) {
-          console.error("Failed to save access history:", error)
-        }
-      }
-
-      alert("Acesso temporário concedido por 10 minutos. Mantenha o foco!")
-
-      // Redirect to the requested URL
-      if (requestedUrl) {
-        window.location.href = requestedUrl
-      }
-    } else {
+    if (!isValidReason(reason)) {
       alert("Por favor, forneça um motivo válido e significativo (mínimo 10 caracteres, sem padrões repetitivos)")
+      return
+    }
+
+    console.log("Access reason:", reason)
+
+    // Check for recent access within the last hour
+    if (requestedDomain) {
+      const hasRecentAccess = await checkRecentAccess(requestedDomain)
+      if (hasRecentAccess) {
+        alert("Você já solicitou acesso a este site na última hora. Aguarde antes de solicitar novamente.")
+        return
+      }
+    }
+
+    // Store temporary access with 10-minute expiration
+    if (requestedDomain) {
+      const expirationTime = Date.now() + 10 * 60 * 1000 // 10 minutes from now
+      const tempAccess = await storage.get<Record<string, number>>("temporaryAccess") || {}
+      tempAccess[requestedDomain] = expirationTime
+      await storage.set("temporaryAccess", tempAccess)
+
+      console.log(`Temporary access granted for ${requestedDomain} until ${new Date(expirationTime).toLocaleTimeString()}`)
+
+      // Save to access history in IndexedDB
+      try {
+        await accessHistoryDB.addEntry({
+          domain: requestedDomain,
+          reason: reason.trim(),
+          timestamp: Date.now(),
+          expirationTime,
+          wasContentCreation: isContentCreationReason(reason)
+        })
+        console.log("Access history saved to IndexedDB")
+      } catch (error) {
+        console.error("Failed to save access history:", error)
+      }
+    }
+
+    alert("Acesso temporário concedido por 10 minutos. Mantenha o foco!")
+
+    // Redirect to the requested URL
+    if (requestedUrl) {
+      window.location.href = requestedUrl
     }
   }
 
