@@ -120,9 +120,7 @@ function BlockContentPage() {
         <div className="flex items-center justify-between mb-12">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Flocus</h1>
-            <p className="text-sm text-muted-foreground">
-              Protegendo seu foco
-            </p>
+            <p className="text-sm text-muted-foreground">Protegendo seu foco</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
@@ -168,9 +166,7 @@ function BlockContentPage() {
                     <Badge variant="secondary" className="mb-2">
                       Bloqueado
                     </Badge>
-                    <CardTitle className="text-2xl">
-                      Site Bloqueado
-                    </CardTitle>
+                    <CardTitle className="text-2xl">Site Bloqueado</CardTitle>
                   </div>
                 </div>
                 <CardDescription className="text-base leading-relaxed">
@@ -181,7 +177,7 @@ function BlockContentPage() {
 
             {/* Action Card */}
             <Card>
-              <CardContent className="pt-6">
+              <CardContent>
                 {!showReasonInput ? (
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
@@ -232,10 +228,12 @@ function BlockContentPage() {
 
           {/* Right: Motivation */}
           <div className="lg:sticky lg:top-12 space-y-6">
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden pt-0">
               <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary" />
               <CardHeader className="text-center pb-8">
-                <div className="mx-auto mb-4 text-6xl">{randomIncentive.emoji}</div>
+                <div className="mx-auto mb-4 text-6xl">
+                  {randomIncentive.emoji}
+                </div>
                 <CardTitle className="text-3xl mb-3">
                   {randomIncentive.title}
                 </CardTitle>
