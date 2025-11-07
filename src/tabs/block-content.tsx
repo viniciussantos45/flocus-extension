@@ -25,6 +25,7 @@ import { Label } from "~src/components/ui/label"
 import { Separator } from "~src/components/ui/separator"
 import { Textarea } from "~src/components/ui/textarea"
 import { getDomain } from "~src/libs/utils"
+import { accessHistoryDB } from "~src/libs/access-history-db"
 
 import { sitesInfo, type SitesInfo } from "./sites-info"
 
@@ -203,6 +204,20 @@ function BlockContentPage() {
         await storage.set("temporaryAccess", tempAccess)
 
         console.log(`Temporary access granted for ${requestedDomain} until ${new Date(expirationTime).toLocaleTimeString()}`)
+
+        // Save to access history in IndexedDB
+        try {
+          await accessHistoryDB.addEntry({
+            domain: requestedDomain,
+            reason: reason.trim(),
+            timestamp: Date.now(),
+            expirationTime,
+            wasContentCreation: isContentCreationReason(reason)
+          })
+          console.log("Access history saved to IndexedDB")
+        } catch (error) {
+          console.error("Failed to save access history:", error)
+        }
       }
 
       alert("Acesso temporário concedido por 10 minutos. Mantenha o foco!")
