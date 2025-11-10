@@ -7,6 +7,8 @@ import {
   XIcon
 } from "@phosphor-icons/react"
 import { useEffect, useMemo, useState } from "react"
+import { motion } from "framer-motion"
+import confetti from "canvas-confetti"
 
 import { Storage } from "@plasmohq/storage"
 
@@ -55,6 +57,36 @@ function BlockContentPage() {
     }
 
     loadBlockCount()
+
+    // Celebration confetti effect on mount
+    const celebrateBlock = () => {
+      // First burst from center
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      })
+
+      // Side bursts for extra dopamine
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+        })
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+        })
+      }, 150)
+    }
+
+    celebrateBlock()
 
     return () => clearInterval(timer)
   }, [])
@@ -250,6 +282,14 @@ function BlockContentPage() {
       }
     }
 
+    // Cautious confetti - smaller celebration for getting access
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.7 },
+      colors: ['#fbbf24', '#f59e0b', '#d97706']
+    })
+
     alert("Acesso temporário concedido por 10 minutos. Mantenha o foco!")
 
     // Redirect to the requested URL
@@ -258,166 +298,337 @@ function BlockContentPage() {
     }
   }
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring" as const,
+        stiffness: 100,
+        damping: 12
+      }
+    }
+  }
+
+  const pulseVariants = {
+    initial: { scale: 1 },
+    animate: {
+      scale: [1, 1.05, 1],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut" as const
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-4 py-12 max-w-5xl">
+      <motion.div
+        className="container mx-auto px-4 py-12 max-w-5xl"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Header Stats */}
-        <div className="flex items-center justify-between mb-12">
+        <motion.div
+          className="flex items-center justify-between mb-12"
+          variants={itemVariants}
+        >
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">Flocus</h1>
-            <p className="text-sm text-muted-foreground">Protegendo seu foco</p>
+            <motion.h1
+              className="text-3xl font-bold tracking-tight"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 100 }}
+            >
+              Flocus
+            </motion.h1>
+            <motion.p
+              className="text-sm text-muted-foreground"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
+            >
+              Protegendo seu foco
+            </motion.p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
+            <motion.div
+              className="text-right"
+              variants={pulseVariants}
+              initial="initial"
+              animate="animate"
+            >
               <div className="text-2xl font-bold text-primary tabular-nums">
                 {todayBlocks}
               </div>
               <div className="text-xs text-muted-foreground">
                 {todayBlocks === 1 ? "bloqueio" : "bloqueios"}
               </div>
-            </div>
+            </motion.div>
             <Separator orientation="vertical" className="h-10" />
-            <div className="text-right">
+            <motion.div
+              className="text-right"
+              animate={{
+                scale: [1, 1.02, 1],
+              }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
               <div className="text-2xl font-bold text-accent tabular-nums font-mono">
                 {formatTime(blockedTime)}
               </div>
               <div className="text-xs text-muted-foreground">tempo salvo</div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* Left: Block Message */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    {siteRequestedInfo?.icon ? (
-                      <siteRequestedInfo.icon
-                        size={32}
-                        weight="fill"
-                        className="text-primary"
-                      />
-                    ) : (
-                      <XIcon size={32} className="text-primary" />
-                    )}
+          <motion.div className="space-y-6" variants={itemVariants}>
+            <motion.div
+              whileHover={{ scale: 1.02, y: -5 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-4 mb-4">
+                    <motion.div
+                      className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"
+                      animate={{
+                        rotate: [0, 5, -5, 0],
+                        scale: [1, 1.1, 1]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      {siteRequestedInfo?.icon ? (
+                        <siteRequestedInfo.icon
+                          size={32}
+                          weight="fill"
+                          className="text-primary"
+                        />
+                      ) : (
+                        <XIcon size={32} className="text-primary" />
+                      )}
+                    </motion.div>
+                    <div>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                      >
+                        <Badge variant="secondary" className="mb-2">
+                          Bloqueado
+                        </Badge>
+                      </motion.div>
+                      <CardTitle className="text-2xl">
+                        {siteRequestedInfo?.name || requestedDomain}
+                      </CardTitle>
+                    </div>
                   </div>
-                  <div>
-                    <Badge variant="secondary" className="mb-2">
-                      Bloqueado
-                    </Badge>
-                    <CardTitle className="text-2xl">
-                      {siteRequestedInfo?.name || requestedDomain}
-                    </CardTitle>
-                  </div>
-                </div>
-                <CardDescription className="text-base leading-relaxed">
-                  {randomMessage}
-                </CardDescription>
-              </CardHeader>
-            </Card>
+                  <CardDescription className="text-base leading-relaxed">
+                    {randomMessage}
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </motion.div>
 
             {/* Action Card */}
-            <Card>
-              <CardContent>
-                {!showReasonInput ? (
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      Precisa acessar este site urgentemente?
-                    </p>
-                    <Button
-                      onClick={handleAccessWithReason}
-                      variant="outline"
-                      size="lg"
-                      className="w-full">
-                      Solicitar acesso com justificativa
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="reason">
-                        Por que você precisa acessar agora?
-                      </Label>
-                      <Textarea
-                        id="reason"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        placeholder="Descreva o motivo do acesso..."
-                        rows={4}
-                        autoFocus
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Mínimo 10 caracteres • {reason.length}/10
+            <motion.div
+              whileHover={{ scale: 1.02, y: -5 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <Card>
+                <CardContent>
+                  {!showReasonInput ? (
+                    <motion.div
+                      className="space-y-4"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      <p className="text-sm text-muted-foreground">
+                        Precisa acessar este site urgentemente?
                       </p>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={() => setShowReasonInput(false)}
-                        variant="ghost"
-                        className="flex-1">
-                        Cancelar
-                      </Button>
-                      <Button onClick={handleSubmitReason} className="flex-1">
-                        Enviar justificativa
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Button
+                          onClick={handleAccessWithReason}
+                          variant="outline"
+                          size="lg"
+                          className="w-full">
+                          Solicitar acesso com justificativa
+                        </Button>
+                      </motion.div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      className="space-y-4"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="reason">
+                          Por que você precisa acessar agora?
+                        </Label>
+                        <Textarea
+                          id="reason"
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          placeholder="Descreva o motivo do acesso..."
+                          rows={4}
+                          autoFocus
+                        />
+                        <motion.p
+                          className="text-xs text-muted-foreground"
+                          animate={{
+                            color: reason.length >= 10 ? "#22c55e" : "#94a3b8"
+                          }}
+                        >
+                          Mínimo 10 caracteres • {reason.length}/10
+                        </motion.p>
+                      </div>
+                      <div className="flex gap-3">
+                        <motion.div
+                          className="flex-1"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button
+                            onClick={() => setShowReasonInput(false)}
+                            variant="ghost"
+                            className="w-full">
+                            Cancelar
+                          </Button>
+                        </motion.div>
+                        <motion.div
+                          className="flex-1"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button onClick={handleSubmitReason} className="w-full">
+                            Enviar justificativa
+                          </Button>
+                        </motion.div>
+                      </div>
+                    </motion.div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
 
           {/* Right: Motivation */}
-          <div className="lg:sticky lg:top-12 space-y-6">
-            <Card className="overflow-hidden pt-0">
-              <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary" />
-              <CardHeader className="text-center pb-8">
-                <div className="mx-auto mb-4 text-6xl">
-                  {randomIncentive.emoji}
-                </div>
-                <CardTitle className="text-3xl mb-3">
-                  {randomIncentive.title}
-                </CardTitle>
-                <CardDescription className="text-base">
-                  {randomIncentive.message}
-                </CardDescription>
-              </CardHeader>
-            </Card>
+          <motion.div
+            className="lg:sticky lg:top-12 space-y-6"
+            variants={itemVariants}
+          >
+            <motion.div
+              whileHover={{ scale: 1.02, y: -5 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <Card className="overflow-hidden pt-0">
+                <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary animate-gradient" />
+                <CardHeader className="text-center pb-8">
+                  <motion.div
+                    className="mx-auto mb-4 text-6xl"
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      rotate: [0, 10, -10, 0]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    {randomIncentive.emoji}
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <CardTitle className="text-3xl mb-3">
+                      {randomIncentive.title}
+                    </CardTitle>
+                    <CardDescription className="text-base">
+                      {randomIncentive.message}
+                    </CardDescription>
+                  </motion.div>
+                </CardHeader>
+              </Card>
+            </motion.div>
 
             {/* Tips Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Dicas de foco</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium mt-0.5">
-                      1
-                    </span>
-                    <span>Faça pausas regulares a cada 25-50 minutos</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium mt-0.5">
-                      2
-                    </span>
-                    <span>Mantenha-se hidratado e com boa postura</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium mt-0.5">
-                      3
-                    </span>
-                    <span>Uma tarefa por vez produz melhores resultados</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
+            <motion.div
+              whileHover={{ scale: 1.02, y: -5 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Dicas de foco</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 text-sm text-muted-foreground">
+                    {[
+                      "Faça pausas regulares a cada 25-50 minutos",
+                      "Mantenha-se hidratado e com boa postura",
+                      "Uma tarefa por vez produz melhores resultados"
+                    ].map((tip, index) => (
+                      <motion.li
+                        key={index}
+                        className="flex items-start gap-3"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.6 + index * 0.1 }}
+                        whileHover={{ x: 5 }}
+                      >
+                        <motion.span
+                          className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium mt-0.5"
+                          whileHover={{
+                            scale: 1.2,
+                            backgroundColor: "hsl(var(--primary))",
+                            color: "hsl(var(--primary-foreground))"
+                          }}
+                        >
+                          {index + 1}
+                        </motion.span>
+                        <span>{tip}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
