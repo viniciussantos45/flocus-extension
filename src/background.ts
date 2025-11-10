@@ -1,5 +1,7 @@
 import { Storage } from "@plasmohq/storage"
 
+import { getDomain } from "~src/libs/utils"
+
 const storage = new Storage({
   area: "local"
 })
@@ -13,18 +15,6 @@ const defaultBlockedUrls = [
   "gupy.io",
   "linkedin.com"
 ]
-
-// Extract domain from URL
-function getDomain(url: string): string {
-  try {
-    const hostname = new URL(url).hostname
-    const parts = hostname.split(".")
-    // Remove subdomains like "www" → keep last two parts: "youtube.com"
-    return parts.slice(-2).join(".")
-  } catch {
-    return ""
-  }
-}
 
 // Get all blocked URLs (default + custom)
 async function getAllBlockedUrls(): Promise<string[]> {

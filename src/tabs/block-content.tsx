@@ -4,7 +4,6 @@ import {
   CrosshairIcon,
   GearIcon,
   LightbulbFilamentIcon,
-  PlusIcon,
   RocketLaunchIcon,
   TimerIcon,
   XIcon
@@ -29,19 +28,10 @@ import {
   CardHeader,
   CardTitle
 } from "~src/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "~src/components/ui/dialog"
-import { Input } from "~src/components/ui/input"
 import { Label } from "~src/components/ui/label"
 import { Separator } from "~src/components/ui/separator"
 import { Textarea } from "~src/components/ui/textarea"
+import { AddUrlDialog } from "~src/components/AddUrlDialog"
 import { accessHistoryDB } from "~src/libs/access-history-db"
 import { getDomain } from "~src/libs/utils"
 
@@ -58,9 +48,6 @@ function BlockContent() {
   const [blockedTime, setBlockedTime] = useState(0)
   const [todayBlocks, setTodayBlocks] = useState(0)
   const [isReady, setIsReady] = useState(false)
-  const [showAddUrlDialog, setShowAddUrlDialog] = useState(false)
-  const [newUrl, setNewUrl] = useState("")
-  const [blockType, setBlockType] = useState<"domain" | "url">("domain")
 
   // Enable dark mode by default
   useEffect(() => {
@@ -347,72 +334,6 @@ function BlockContent() {
     }
   }
 
-  const handleAddBlockedUrl = async () => {
-    const trimmedUrl = newUrl.trim()
-
-    if (!trimmedUrl) {
-      alert("Por favor, insira uma URL válida")
-      return
-    }
-
-    try {
-      // Get current blocked URLs from storage
-      const customBlockedUrls =
-        (await storage.get<string[]>("customBlockedUrls")) || []
-
-      let urlToBlock = trimmedUrl
-
-      // If blocking domain, extract domain from URL
-      if (blockType === "domain") {
-        try {
-          const domain = getDomain(
-            trimmedUrl.startsWith("http") ? trimmedUrl : `https://${trimmedUrl}`
-          )
-          if (!domain) {
-            alert("Não foi possível extrair o domínio da URL fornecida")
-            return
-          }
-          urlToBlock = domain
-        } catch (error) {
-          alert("URL inválida. Por favor, insira uma URL válida")
-          return
-        }
-      }
-
-      // Check if URL/domain is already blocked
-      if (customBlockedUrls.includes(urlToBlock)) {
-        alert("Esta URL/domínio já está bloqueada")
-        return
-      }
-
-      // Add to blocked list
-      customBlockedUrls.push(urlToBlock)
-      await storage.set("customBlockedUrls", customBlockedUrls)
-
-      // Confetti celebration
-      const primaryColor = getComputedStyle(document.documentElement)
-        .getPropertyValue("--primary")
-        .trim()
-
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.6 },
-        colors: [`hsl(${primaryColor})`, "#00E676", "#FFD600"]
-      })
-
-      alert(`URL bloqueada com sucesso: ${urlToBlock}`)
-
-      // Reset form
-      setNewUrl("")
-      setBlockType("domain")
-      setShowAddUrlDialog(false)
-    } catch (error) {
-      console.error("Failed to add blocked URL:", error)
-      alert("Erro ao adicionar URL bloqueada")
-    }
-  }
-
   if (!isReady) {
     return (
       <div className="p-8 text-center text-muted-foreground">Carregando...</div>
@@ -534,92 +455,7 @@ function BlockContent() {
               <Separator orientation="vertical" className="h-12" />
 
               {/* Add URL Button */}
-              <Dialog
-                open={showAddUrlDialog}
-                onOpenChange={setShowAddUrlDialog}>
-                <DialogTrigger asChild>
-                  <m.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 25
-                    }}>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="gap-2 shadow-md hover:shadow-lg transition-shadow">
-                      <PlusIcon size={16} weight="bold" />
-                      <span className="hidden sm:inline">Adicionar URL</span>
-                    </Button>
-                  </m.div>
-                </DialogTrigger>
-                <DialogContent className="text-foreground">
-                  <DialogHeader>
-                    <DialogTitle>Bloquear nova URL</DialogTitle>
-                    <DialogDescription>
-                      Adicione uma nova URL ou domínio para bloquear e manter o
-                      foco.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="url-input">URL ou Domínio</Label>
-                      <Input
-                        id="url-input"
-                        type="text"
-                        value={newUrl}
-                        onChange={(e) => setNewUrl(e.target.value)}
-                        placeholder="exemplo.com ou https://exemplo.com/pagina"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label>Tipo de bloqueio</Label>
-                      <div className="flex gap-3">
-                        <Button
-                          type="button"
-                          variant={
-                            blockType === "domain" ? "default" : "outline"
-                          }
-                          className="flex-1"
-                          onClick={() => setBlockType("domain")}>
-                          Domínio inteiro
-                        </Button>
-                        <Button
-                          type="button"
-                          variant={blockType === "url" ? "default" : "outline"}
-                          className="flex-1"
-                          onClick={() => setBlockType("url")}>
-                          URL específica
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {blockType === "domain"
-                          ? "Bloqueará todas as páginas deste domínio"
-                          : "Bloqueará apenas esta URL específica"}
-                      </p>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setShowAddUrlDialog(false)
-                        setNewUrl("")
-                        setBlockType("domain")
-                      }}>
-                      Cancelar
-                    </Button>
-                    <Button
-                      onClick={handleAddBlockedUrl}
-                      disabled={!newUrl.trim()}>
-                      Adicionar
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <AddUrlDialog variant="default" size="sm" showIcon={true} />
 
               <Separator orientation="vertical" className="h-12" />
 
