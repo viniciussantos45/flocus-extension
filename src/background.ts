@@ -4,7 +4,7 @@ const storage = new Storage({
   area: "local"
 })
 
-const blockedUrls = [
+const defaultBlockedUrls = [
   "youtube.com",
   "facebook.com",
   "twitter.com",
@@ -24,6 +24,12 @@ function getDomain(url: string): string {
   } catch {
     return ""
   }
+}
+
+// Get all blocked URLs (default + custom)
+async function getAllBlockedUrls(): Promise<string[]> {
+  const customBlockedUrls = await storage.get<string[]>("customBlockedUrls") || []
+  return [...defaultBlockedUrls, ...customBlockedUrls]
 }
 
 // Check if domain has temporary access
@@ -48,6 +54,8 @@ async function hasTemporaryAccess(domain: string): Promise<boolean> {
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   const url = changeInfo.url || tab.url || null
   if (url) {
+    const blockedUrls = await getAllBlockedUrls()
+
     if (blockedUrls.some((blockedUrl) => url!.includes(blockedUrl))) {
       const domain = getDomain(url)
 
