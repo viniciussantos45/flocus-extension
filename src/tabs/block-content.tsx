@@ -383,7 +383,7 @@ function BlockContent() {
 
   return (
     <LazyMotion features={loadDomFeatures}>
-      <div className="min-h-screen w-full bg-background text-foreground">
+      <div className="min-h-screen w-full bg-background text-foreground font-sans">
         <m.div
           className="container mx-auto px-4 py-12 max-w-5xl"
           variants={containerVariants}

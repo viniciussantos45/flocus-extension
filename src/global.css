@@ -1,3 +1,6 @@
+@import '@fontsource-variable/fira-code';
+@import '@fontsource-variable/outfit';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,9 +38,9 @@
   --sidebar-accent-foreground: 240 41.4634% 8.0392%;
   --sidebar-border: 198.0000 18.5185% 89.4118%;
   --sidebar-ring: 312.9412 100% 50%;
-  --font-sans: Outfit, sans-serif;
+  --font-sans: 'Outfit Variable', sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: Fira Code, monospace;
+  --font-mono: 'Fira Code Variable', monospace;
   --radius: 0.975rem;
   --shadow-x: 0px;
   --shadow-y: 4px;
@@ -90,9 +93,9 @@
   --sidebar-accent-foreground: 240 41.4634% 8.0392%;
   --sidebar-border: 240 34.2857% 27.4510%;
   --sidebar-ring: 312.9412 100% 50%;
-  --font-sans: Outfit, sans-serif;
+  --font-sans: 'Outfit Variable', sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: Fira Code, monospace;
+  --font-mono: 'Fira Code Variable', monospace;
   --radius: 0.975rem;
   --shadow-x: 0px;
   --shadow-y: 4px;
