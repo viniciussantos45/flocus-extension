@@ -2,6 +2,7 @@ import {
   BarbellIcon,
   BrainIcon,
   CrosshairIcon,
+  LightbulbFilamentIcon,
   RocketLaunchIcon,
   TimerIcon,
   XIcon
@@ -14,6 +15,8 @@ import { ErrorBoundary } from "react-error-boundary"
 import { Storage } from "@plasmohq/storage"
 
 import "~/src/global.css"
+
+import logo from "data-base64:../../assets/logo.png"
 
 import { Badge } from "~src/components/ui/badge"
 import { Button } from "~src/components/ui/button"
@@ -44,6 +47,11 @@ function BlockContent() {
   const [todayBlocks, setTodayBlocks] = useState(0)
   const [isReady, setIsReady] = useState(false)
 
+  // Enable dark mode by default
+  useEffect(() => {
+    document.documentElement.classList.add("dark")
+  }, [])
+
   // Aguarda DOM pronto
   useEffect(() => {
     const onReady = () => setTimeout(() => setIsReady(true), 80)
@@ -66,23 +74,69 @@ function BlockContent() {
     }
 
     const celebrateBlock = () => {
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } })
+      // Get theme colors from CSS variables
+      const primaryColor = getComputedStyle(document.documentElement)
+        .getPropertyValue("--primary")
+        .trim()
+      const accentColor = getComputedStyle(document.documentElement)
+        .getPropertyValue("--accent")
+        .trim()
+
+      // Convert HSL to usable format for confetti
+      const colors = [
+        `hsl(${primaryColor})`,
+        `hsl(${accentColor})`,
+        "#FF1744", // Keep some vibrant colors for variety
+        "#00E676",
+        "#FFD600",
+        "#E040FB"
+      ]
+
+      // First burst - central explosion
+      confetti({
+        particleCount: 120,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors,
+        startVelocity: 45,
+        gravity: 1.2,
+        scalar: 1.2
+      })
+
+      // Second wave - side bursts
+      setTimeout(() => {
+        // Left side
+        confetti({
+          particleCount: 60,
+          angle: 60,
+          spread: 70,
+          origin: { x: 0, y: 0.7 },
+          colors,
+          startVelocity: 35
+        })
+        // Right side
+        confetti({
+          particleCount: 60,
+          angle: 120,
+          spread: 70,
+          origin: { x: 1, y: 0.7 },
+          colors,
+          startVelocity: 35
+        })
+      }, 200)
+
+      // Third wave - Stars from top
       setTimeout(() => {
         confetti({
-          particleCount: 50,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff"]
+          particleCount: 80,
+          spread: 360,
+          origin: { y: 0.3 },
+          colors,
+          shapes: ["circle", "square"],
+          gravity: 0.8,
+          scalar: 0.8
         })
-        confetti({
-          particleCount: 50,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff"]
-        })
-      }, 150)
+      }, 400)
     }
 
     loadBlockCount()
@@ -259,11 +313,16 @@ function BlockContent() {
       }
     }
 
+    // Cautious confetti using theme colors
+    const accentColor = getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent")
+      .trim()
+
     confetti({
       particleCount: 50,
       spread: 60,
       origin: { y: 0.7 },
-      colors: ["#fbbf24", "#f59e0b", "#d97706"]
+      colors: [`hsl(${accentColor})`, "#fbbf24", "#f59e0b"]
     })
 
     alert("Acesso temporário concedido por 10 minutos. Mantenha o foco!")
@@ -284,24 +343,39 @@ function BlockContent() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.15,
+        when: "beforeChildren"
+      }
     }
   }
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 30, opacity: 0, scale: 0.95 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring" as const, stiffness: 100, damping: 12 }
+      scale: 1,
+      transition: {
+        type: "spring" as const,
+        stiffness: 120,
+        damping: 15,
+        mass: 0.8
+      }
     }
   }
 
   const pulseVariants = {
-    initial: { scale: 1, opacity: 1 },
+    initial: { scale: 1 },
     animate: {
-      scale: [1, 1.05, 1],
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" as const }
+      scale: [1, 1.08, 1],
+      transition: {
+        duration: 2.5,
+        repeat: Infinity,
+        ease: [0.4, 0, 0.2, 1] as any,
+        repeatType: "reverse" as const
+      }
     }
   }
 
@@ -309,7 +383,7 @@ function BlockContent() {
 
   return (
     <LazyMotion features={loadDomFeatures}>
-      <div className="min-h-screen w-full bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="min-h-screen w-full bg-background text-foreground">
         <m.div
           className="container mx-auto px-4 py-12 max-w-5xl"
           variants={containerVariants}
@@ -322,47 +396,115 @@ function BlockContent() {
             initial="hidden"
             animate="visible">
             <div className="space-y-1">
-              <m.h1
-                className="text-3xl font-bold tracking-tight"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 100 }}>
-                Flocus
-              </m.h1>
-              <m.p
-                className="text-sm text-muted-foreground"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 100 }}>
-                Protegendo seu foco
-              </m.p>
+              <div className="flex items-center flex-row-reverse">
+                <div>
+                  <m.h1
+                    className="text-3xl font-bold tracking-tight"
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 100 }}>
+                    Flocus
+                  </m.h1>
+
+                  <m.p
+                    className="text-sm text-muted-foreground"
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.1, type: "spring", stiffness: 100 }}>
+                    Protegendo seu foco
+                  </m.p>
+                </div>
+                <m.img
+                  className="text-3xl font-bold tracking-tight"
+                  src={logo}
+                  alt="Flocus Logo"
+                  width={50}
+                  height={50}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 100 }}
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
+              {/* Block Counter with Glow */}
               <m.div
-                className="text-right"
+                className="text-right relative"
                 variants={pulseVariants}
                 initial="initial"
                 animate="animate">
-                <div className="text-2xl font-bold text-primary tabular-nums">
-                  {todayBlocks}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {todayBlocks === 1 ? "bloqueio" : "bloqueios"}
+                <m.div
+                  className="absolute inset-0 rounded-lg blur-xl opacity-30 bg-primary"
+                  animate={{
+                    opacity: [0.2, 0.4, 0.2],
+                    scale: [0.8, 1.1, 0.8]
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut" as const
+                  }}
+                />
+                <div className="relative">
+                  <m.div
+                    className="text-3xl font-bold text-primary tabular-nums"
+                    animate={{
+                      textShadow: [
+                        "0 0 0px hsl(var(--primary) / 0)",
+                        "0 0 15px hsl(var(--primary) / 0.6)",
+                        "0 0 0px hsl(var(--primary) / 0)"
+                      ]
+                    }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      ease: "easeInOut" as const
+                    }}>
+                    {todayBlocks}
+                  </m.div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
+                    {todayBlocks === 1 ? "bloqueio" : "bloqueios"}
+                  </div>
                 </div>
               </m.div>
-              <Separator orientation="vertical" className="h-10" />
+
+              <Separator orientation="vertical" className="h-12" />
+
+              {/* Time Counter with Progress Ring */}
               <m.div
-                className="text-right"
-                animate={{ opacity: [0.8, 1, 0.8], scale: [1, 1.02, 1] }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}>
-                <div className="text-2xl font-bold text-accent tabular-nums font-mono">
-                  {formatTime(blockedTime)}
+                className="text-right relative"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, type: "spring" as const }}>
+                <m.div
+                  className="absolute inset-0 rounded-lg blur-xl opacity-20 bg-accent"
+                  animate={{
+                    opacity: [0.15, 0.35, 0.15],
+                    scale: [0.9, 1.15, 0.9]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut" as const
+                  }}
+                />
+                <div className="relative">
+                  <m.div
+                    className="text-3xl font-bold text-accent tabular-nums font-mono"
+                    animate={{
+                      opacity: [0.85, 1, 0.85]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut" as const
+                    }}>
+                    {formatTime(blockedTime)}
+                  </m.div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mt-1">
+                    tempo salvo
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">tempo salvo</div>
               </m.div>
             </div>
           </m.div>
@@ -370,27 +512,238 @@ function BlockContent() {
           {/* Main Grid */}
           <div className="grid lg:grid-cols-2 gap-8 items-start">
             {/* Esquerda */}
+
+            {/* Direita - Motivação com Dicas */}
+            <m.div
+              className="lg:sticky lg:top-12"
+              variants={itemVariants}
+              initial="hidden"
+              animate="visible">
+              {/* Card de Motivação Integrado */}
+              <m.div
+                whileHover={{
+                  scale: 1.03,
+                  y: -8,
+                  boxShadow: "0 25px 50px -15px rgba(0, 0, 0, 0.35)"
+                }}
+                transition={{
+                  type: "spring" as const,
+                  stiffness: 400,
+                  damping: 25
+                }}
+                className="rounded-xl">
+                <Card className="overflow-hidden pt-0 border-2 border-border/50 relative">
+                  {/* Animated gradient bar */}
+                  <div className="h-3 bg-gradient-to-r from-primary via-accent to-primary animate-gradient relative overflow-hidden">
+                    <m.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/30 to-transparent"
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "linear" as const
+                      }}
+                    />
+                  </div>
+
+                  <CardHeader className="text-center pb-6 pt-6 relative">
+                    {/* Glow background */}
+                    <m.div
+                      className="absolute top-1/4 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-3xl opacity-20"
+                      style={{
+                        background:
+                          "radial-gradient(circle, hsl(var(--primary) / 0.4) 0%, transparent 70%)"
+                      }}
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.15, 0.25, 0.15]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut" as const
+                      }}
+                    />
+
+                    {/* Emoji with enhanced animation */}
+                    <m.div
+                      className="mx-auto mb-6 text-7xl relative z-10"
+                      animate={{
+                        scale: [1, 1.15, 1],
+                        rotate: [0, 8, -8, 0],
+                        y: [0, -5, 0]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut" as const
+                      }}
+                      whileHover={{
+                        scale: 1.3,
+                        rotate: 0,
+                        transition: { duration: 0.3 }
+                      }}>
+                      {randomIncentive.emoji}
+                    </m.div>
+
+                    {/* Text content */}
+                    <m.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5, type: "spring" as const }}>
+                      <CardTitle className="text-3xl mb-4 font-bold">
+                        {randomIncentive.title}
+                      </CardTitle>
+                      <CardDescription className="text-base leading-relaxed px-4">
+                        {randomIncentive.message}
+                      </CardDescription>
+                    </m.div>
+                  </CardHeader>
+
+                  {/* Separator with animated shine */}
+                  <m.div
+                    className="relative h-px bg-gradient-to-r from-transparent via-border to-transparent mx-8 mb-6"
+                    initial={{ scaleX: 0, opacity: 0 }}
+                    animate={{ scaleX: 1, opacity: 1 }}
+                    transition={{ delay: 1, duration: 0.8 }}>
+                    <m.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/50 to-transparent"
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear" as const,
+                        delay: 1.5
+                      }}
+                    />
+                  </m.div>
+
+                  {/* Tips Section Integrado */}
+                  <CardContent className="pt-0 pb-8">
+                    <m.div
+                      className="flex items-center justify-center gap-2 mb-6"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.2, type: "spring" as const }}>
+                      <m.span
+                        className="text-2xl"
+                        animate={{
+                          rotate: [0, 10, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut" as const
+                        }}>
+                        <LightbulbFilamentIcon
+                          size={24}
+                          weight="fill"
+                          className="text-yellow-200"
+                        />
+                      </m.span>
+                      <h3 className="text-lg font-semibold">Dicas de foco</h3>
+                    </m.div>
+
+                    <ul className="space-y-4 text-sm px-4">
+                      {[
+                        "Faça pausas regulares a cada 25-50 minutos",
+                        "Mantenha-se hidratado e com boa postura",
+                        "Uma tarefa por vez produz melhores resultados"
+                      ].map((tip, index) => (
+                        <m.li
+                          key={index}
+                          className="flex items-start gap-3 group cursor-default"
+                          initial={{ opacity: 0, x: -30, scale: 0.8 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          transition={{
+                            delay: 1.4 + index * 0.4,
+                            type: "spring" as const,
+                            stiffness: 200,
+                            damping: 20
+                          }}
+                          whileHover={{ x: 8, scale: 1.02 }}>
+                          <m.span
+                            className="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-primary text-xs font-bold mt-0.5 shadow-md"
+                            initial={{ rotate: -180, scale: 0 }}
+                            animate={{ rotate: 0, scale: 1 }}
+                            transition={{
+                              delay: 1.4 + index * 0.4 + 0.2,
+                              type: "spring" as const,
+                              stiffness: 300,
+                              damping: 15
+                            }}
+                            whileHover={{
+                              scale: 1.4,
+                              rotate: 360,
+                              background:
+                                "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%)",
+                              boxShadow: "0 0 20px hsl(var(--primary) / 0.5)"
+                            }}
+                            transition={{
+                              type: "spring" as const,
+                              stiffness: 500,
+                              damping: 20
+                            }}>
+                            {index + 1}
+                          </m.span>
+                          <span className="text-muted-foreground group-hover:text-foreground transition-colors leading-relaxed">
+                            {tip}
+                          </span>
+                        </m.li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </m.div>
+            </m.div>
+
             <m.div
               className="space-y-6"
               variants={itemVariants}
               initial="hidden"
               animate="visible">
               <m.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                whileHover={{
+                  scale: 1.03,
+                  y: -8,
+                  boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.3)"
+                }}
+                transition={{
+                  type: "spring" as const,
+                  stiffness: 400,
+                  damping: 25
+                }}
                 initial="hidden"
-                animate="visible">
-                <Card>
+                animate="visible"
+                className="rounded-xl">
+                <Card className="border-2 border-border/50 transition-colors hover:border-primary/30">
                   <CardHeader>
                     <div className="flex items-center gap-4 mb-4">
                       <m.div
-                        className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"
-                        animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
+                        className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative overflow-hidden"
+                        animate={{
+                          rotate: [0, 6, -6, 0],
+                          scale: [1, 1.05, 1]
+                        }}
                         transition={{
-                          duration: 3,
+                          duration: 4,
                           repeat: Infinity,
-                          ease: "easeInOut"
-                        }}>
+                          ease: "easeInOut" as const
+                        }}
+                        whileHover={{ scale: 1.15, rotate: 0 }}>
+                        <m.div
+                          className="absolute inset-0 bg-gradient-to-br from-primary/30 to-transparent"
+                          animate={{
+                            opacity: [0.3, 0.6, 0.3],
+                            rotate: [0, 180, 360]
+                          }}
+                          transition={{
+                            duration: 8,
+                            repeat: Infinity,
+                            ease: "linear" as const
+                          }}
+                        />
                         {SiteIcon ? (
                           <SiteIcon
                             size={32}
@@ -428,32 +781,45 @@ function BlockContent() {
 
               {/* Ações */}
               <m.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                whileHover={{
+                  scale: 1.03,
+                  y: -8,
+                  boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.3)"
+                }}
+                transition={{
+                  type: "spring" as const,
+                  stiffness: 400,
+                  damping: 25
+                }}
                 initial="hidden"
-                animate="visible">
-                <Card>
+                animate="visible"
+                className="rounded-xl">
+                <Card className="border-2 border-border/50 transition-colors hover:border-accent/30">
                   <CardContent>
                     {!showReasonInput ? (
                       <m.div
                         className="space-y-4"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}>
-                        <p className="text-sm text-muted-foreground">
+                        transition={{ delay: 0.4, type: "spring" as const }}>
+                        <p className="text-sm text-muted-foreground text-center">
                           Precisa acessar este site urgentemente?
                         </p>
-                        <m.div
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}>
-                          <Button
-                            onClick={handleAccessWithReason}
-                            variant="outline"
-                            size="lg"
-                            className="w-full">
+                        <Button
+                          onClick={handleAccessWithReason}
+                          variant="ghost"
+                          size="lg"
+                          className="w-full font-medium shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden group">
+                          <m.span
+                            className="absolute inset-0 bg-gradient-to-r from-accent/10 to-primary/10"
+                            initial={{ x: "-100%" }}
+                            whileHover={{ x: "100%" }}
+                            transition={{ duration: 0.5 }}
+                          />
+                          <span className="relative">
                             Solicitar acesso com justificativa
-                          </Button>
-                        </m.div>
+                          </span>
+                        </Button>
                       </m.div>
                     ) : (
                       <m.div
@@ -473,12 +839,12 @@ function BlockContent() {
                             rows={4}
                             autoFocus
                           />
-                          {/* sem animar 'color' diretamente */}
+                          {/* Character counter with theme colors */}
                           <p
                             className={
-                              "text-xs " +
+                              "text-xs font-medium transition-colors " +
                               (reason.length >= 10
-                                ? "text-green-500"
+                                ? "text-accent"
                                 : "text-muted-foreground")
                             }>
                             Mínimo 10 caracteres • {reason.length}/10
@@ -487,100 +853,55 @@ function BlockContent() {
                         <div className="flex gap-3">
                           <m.div
                             className="flex-1"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}>
+                            whileHover={{ scale: 1.06, y: -2 }}
+                            whileTap={{ scale: 0.94 }}
+                            transition={{
+                              type: "spring" as const,
+                              stiffness: 500,
+                              damping: 30
+                            }}>
                             <Button
                               onClick={() => setShowReasonInput(false)}
                               variant="ghost"
-                              className="w-full">
+                              className="w-full shadow-md hover:shadow-lg transition-shadow">
                               Cancelar
                             </Button>
                           </m.div>
                           <m.div
                             className="flex-1"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}>
+                            whileHover={{
+                              scale: 1.06,
+                              y: -2,
+                              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)"
+                            }}
+                            whileTap={{ scale: 0.94 }}
+                            transition={{
+                              type: "spring" as const,
+                              stiffness: 500,
+                              damping: 30
+                            }}>
                             <Button
                               onClick={handleSubmitReason}
-                              className="w-full">
-                              Enviar justificativa
+                              className="w-full font-medium shadow-lg relative overflow-hidden group"
+                              disabled={!isValidReason(reason)}>
+                              <m.div
+                                className="absolute inset-0 bg-gradient-to-r from-primary-foreground/0 via-primary-foreground/20 to-primary-foreground/0"
+                                initial={{ x: "-100%" }}
+                                animate={{ x: "200%" }}
+                                transition={{
+                                  duration: 2,
+                                  repeat: Infinity,
+                                  ease: "linear" as const
+                                }}
+                              />
+                              <span className="relative">
+                                Enviar justificativa
+                              </span>
                             </Button>
                           </m.div>
                         </div>
                       </m.div>
                     )}
-                  </CardContent>
-                </Card>
-              </m.div>
-            </m.div>
-
-            {/* Direita */}
-            <m.div
-              className="lg:sticky lg:top-12 space-y-6"
-              variants={itemVariants}
-              initial="hidden"
-              animate="visible">
-              <m.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                <Card className="overflow-hidden pt-0">
-                  <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary animate-gradient" />
-                  <CardHeader className="text-center pb-8">
-                    <m.div
-                      className="mx-auto mb-4 text-6xl"
-                      animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}>
-                      {randomIncentive.emoji}
-                    </m.div>
-                    <m.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 }}>
-                      <CardTitle className="text-3xl mb-3">
-                        {randomIncentive.title}
-                      </CardTitle>
-                      <CardDescription className="text-base">
-                        {randomIncentive.message}
-                      </CardDescription>
-                    </m.div>
-                  </CardHeader>
-                </Card>
-              </m.div>
-
-              <m.div
-                whileHover={{ scale: 1.02, y: -5 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Dicas de foco</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3 text-sm text-muted-foreground">
-                      {[
-                        "Faça pausas regulares a cada 25-50 minutos",
-                        "Mantenha-se hidratado e com boa postura",
-                        "Uma tarefa por vez produz melhores resultados"
-                      ].map((tip, index) => (
-                        <m.li
-                          key={index}
-                          className="flex items-start gap-3"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.6 + index * 0.1 }}
-                          whileHover={{ x: 5 }}>
-                          <m.span
-                            className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium mt-0.5"
-                            whileHover={{ scale: 1.2 }}>
-                            {index + 1}
-                          </m.span>
-                          <span>{tip}</span>
-                        </m.li>
-                      ))}
-                    </ul>
                   </CardContent>
                 </Card>
               </m.div>
