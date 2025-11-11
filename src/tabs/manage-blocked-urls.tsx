@@ -1,9 +1,8 @@
 import {
-  ArrowLeftIcon,
-  PlusIcon,
-  TrashIcon,
   ListBulletsIcon,
-  ShieldCheckIcon
+  PlusIcon,
+  ShieldCheckIcon,
+  TrashIcon
 } from "@phosphor-icons/react"
 import { LazyMotion, m } from "framer-motion"
 import { useEffect, useState } from "react"
@@ -15,6 +14,7 @@ import "~/src/global.css"
 
 import logo from "data-base64:../../assets/logo.png"
 
+import { AddUrlDialog } from "~src/components/AddUrlDialog"
 import { Badge } from "~src/components/ui/badge"
 import { Button } from "~src/components/ui/button"
 import {
@@ -25,7 +25,6 @@ import {
   CardTitle
 } from "~src/components/ui/card"
 import { Separator } from "~src/components/ui/separator"
-import { AddUrlDialog } from "~src/components/AddUrlDialog"
 
 const storage = new Storage({ area: "local" })
 
@@ -154,14 +153,14 @@ function ManageBlockedUrls() {
                   stiffness: 400,
                   damping: 25
                 }}>
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => window.history.back()}
                   className="gap-2">
                   <ArrowLeftIcon size={16} weight="bold" />
                   <span className="hidden sm:inline">Voltar</span>
-                </Button>
+                </Button> */}
               </m.div>
 
               <Separator orientation="vertical" className="h-12" />
@@ -293,9 +292,7 @@ function ManageBlockedUrls() {
                         />
                       </m.div>
                       <div>
-                        <CardTitle className="text-2xl">
-                          URLs Padrão
-                        </CardTitle>
+                        <CardTitle className="text-2xl">URLs Padrão</CardTitle>
                         <CardDescription>
                           URLs bloqueadas por padrão
                         </CardDescription>

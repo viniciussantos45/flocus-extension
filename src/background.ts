@@ -7,24 +7,26 @@ const storage = new Storage({
 })
 
 const defaultBlockedUrls = [
-  "youtube.com",
-  "facebook.com",
+  "www.youtube.com",
+  "www.facebook.com",
   "twitter.com",
+  "x.com",
   "instagram.com",
-  "reddit.com",
-  "gupy.io",
+  "www.reddit.com",
   "linkedin.com"
 ]
 
 // Get all blocked URLs (default + custom)
 async function getAllBlockedUrls(): Promise<string[]> {
-  const customBlockedUrls = await storage.get<string[]>("customBlockedUrls") || []
+  const customBlockedUrls =
+    (await storage.get<string[]>("customBlockedUrls")) || []
   return [...defaultBlockedUrls, ...customBlockedUrls]
 }
 
 // Check if domain has temporary access
 async function hasTemporaryAccess(domain: string): Promise<boolean> {
-  const tempAccess = await storage.get<Record<string, number>>("temporaryAccess") || {}
+  const tempAccess =
+    (await storage.get<Record<string, number>>("temporaryAccess")) || {}
   const expirationTime = tempAccess[domain]
 
   if (!expirationTime) return false
