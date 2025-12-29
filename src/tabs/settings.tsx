@@ -1,8 +1,12 @@
 import {
+  CheckCircleIcon,
+  GearIcon,
   ListBulletsIcon,
+  ListChecksIcon,
   PlusIcon,
   ShieldCheckIcon,
-  TrashIcon
+  TrashIcon,
+  WarningCircleIcon
 } from "@phosphor-icons/react"
 import { LazyMotion, m } from "framer-motion"
 import { useEffect, useState } from "react"
@@ -24,7 +28,10 @@ import {
   CardHeader,
   CardTitle
 } from "~src/components/ui/card"
+import { Input } from "~src/components/ui/input"
+import { Label } from "~src/components/ui/label"
 import { Separator } from "~src/components/ui/separator"
+import { todoistService } from "~src/services/todoist"
 
 const storage = new Storage({ area: "local" })
 
@@ -42,9 +49,15 @@ const defaultBlockedUrls = [
 // ⚠️ Loader dinâmico das features do DOM
 const loadDomFeatures = async () => (await import("framer-motion")).domAnimation
 
-function ManageBlockedUrls() {
+function Settings() {
   const [customBlockedUrls, setCustomBlockedUrls] = useState<string[]>([])
   const [isReady, setIsReady] = useState(false)
+  const [apiKey, setApiKey] = useState("")
+  const [hasExistingKey, setHasExistingKey] = useState(false)
+  const [isValidating, setIsValidating] = useState(false)
+  const [validationStatus, setValidationStatus] = useState<
+    "idle" | "valid" | "invalid"
+  >("idle")
 
   // Enable dark mode by default
   useEffect(() => {
@@ -59,16 +72,25 @@ function ManageBlockedUrls() {
     return () => window.removeEventListener("load", onReady)
   }, [])
 
-  // Load custom blocked URLs
+  // Load custom blocked URLs and check for Todoist API key
   useEffect(() => {
     if (!isReady) return
 
     loadCustomUrls()
+    checkExistingKey()
   }, [isReady])
 
   const loadCustomUrls = async () => {
     const urls = (await storage.get<string[]>("customBlockedUrls")) || []
     setCustomBlockedUrls(urls)
+  }
+
+  const checkExistingKey = async () => {
+    const hasKey = await todoistService.hasApiKey()
+    setHasExistingKey(hasKey)
+    if (hasKey) {
+      setValidationStatus("valid")
+    }
   }
 
   const handleUrlAdded = async () => {
@@ -91,6 +113,48 @@ function ManageBlockedUrls() {
       console.error("Failed to delete URL:", error)
       alert("Erro ao remover URL bloqueada")
     }
+  }
+
+  const handleSaveApiKey = async () => {
+    if (!apiKey.trim()) {
+      alert("Por favor, insira uma chave de API válida")
+      return
+    }
+
+    setIsValidating(true)
+    setValidationStatus("idle")
+
+    const success = await todoistService.saveApiKey(apiKey.trim())
+
+    setIsValidating(false)
+
+    if (success) {
+      setValidationStatus("valid")
+      setHasExistingKey(true)
+      setApiKey("")
+      alert("Chave de API do Todoist salva com sucesso!")
+    } else {
+      setValidationStatus("invalid")
+      alert(
+        "Chave de API inválida. Verifique se você copiou corretamente do Todoist."
+      )
+    }
+  }
+
+  const handleRemoveApiKey = async () => {
+    if (
+      !confirm(
+        "Tem certeza que deseja remover a integração com o Todoist? Suas tarefas não serão mais exibidas."
+      )
+    ) {
+      return
+    }
+
+    await todoistService.removeApiKey()
+    setHasExistingKey(false)
+    setValidationStatus("idle")
+    setApiKey("")
+    alert("Integração com o Todoist removida.")
   }
 
   if (!isReady) {
@@ -182,7 +246,7 @@ function ManageBlockedUrls() {
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 100 }}>
-                    URLs Bloqueadas
+                    Configurações
                   </m.h1>
 
                   <m.p
@@ -190,7 +254,7 @@ function ManageBlockedUrls() {
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.1, type: "spring", stiffness: 100 }}>
-                    Gerencie suas URLs e domínios bloqueados
+                    Gerencie suas URLs e integrações
                   </m.p>
                 </div>
               </div>
@@ -252,7 +316,9 @@ function ManageBlockedUrls() {
           </m.div>
 
           {/* Main Content */}
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="space-y-8">
+            {/* URL Management Grid */}
+            <div className="grid lg:grid-cols-2 gap-8">
             {/* Default URLs */}
             <m.div
               className="space-y-6"
@@ -438,6 +504,178 @@ function ManageBlockedUrls() {
                 </Card>
               </m.div>
             </m.div>
+            </div>
+
+            {/* Todoist Integration Section */}
+            <m.div
+              variants={itemVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover={{
+                scale: 1.01,
+                y: -4,
+                boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.3)"
+              }}
+              transition={{
+                type: "spring" as const,
+                stiffness: 400,
+                damping: 25
+              }}
+              className="rounded-xl">
+              <Card className="border-2 border-border/50 transition-colors hover:border-primary/30">
+                <CardHeader>
+                  <div className="flex items-center gap-4 mb-2">
+                    <m.div
+                      className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
+                      animate={{
+                        rotate: [0, 6, -6, 0],
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut" as const
+                      }}>
+                      <ListChecksIcon
+                        size={32}
+                        weight="fill"
+                        className="text-primary"
+                      />
+                    </m.div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <CardTitle className="text-2xl">
+                          Integração Todoist
+                        </CardTitle>
+                        {hasExistingKey && (
+                          <Badge variant="default" className="gap-1">
+                            <CheckCircleIcon size={14} weight="fill" />
+                            Ativa
+                          </Badge>
+                        )}
+                      </div>
+                      <CardDescription>
+                        Visualize suas 5 últimas tarefas pendentes na tela de
+                        bloqueio
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Info Section */}
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <GearIcon size={18} weight="fill" />
+                      Como configurar
+                    </h4>
+                    <ol className="text-sm text-muted-foreground space-y-2 ml-6 list-decimal">
+                      <li>
+                        Acesse{" "}
+                        <a
+                          href="https://todoist.com/app/settings/integrations"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline">
+                          Todoist Configurações → Integrações
+                        </a>
+                      </li>
+                      <li>
+                        Role até "Token de API do desenvolvedor" e copie seu
+                        token
+                      </li>
+                      <li>Cole o token no campo abaixo e clique em salvar</li>
+                    </ol>
+                  </div>
+
+                  <Separator />
+
+                  {/* API Key Input */}
+                  {!hasExistingKey ? (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="todoist-api-key">
+                          Token de API do Todoist
+                        </Label>
+                        <Input
+                          id="todoist-api-key"
+                          type="password"
+                          placeholder="Cole seu token aqui..."
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          className="font-mono"
+                        />
+                        {validationStatus === "invalid" && (
+                          <p className="text-sm text-destructive flex items-center gap-2">
+                            <WarningCircleIcon size={16} weight="fill" />
+                            Token inválido. Verifique e tente novamente.
+                          </p>
+                        )}
+                      </div>
+
+                      <m.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}>
+                        <Button
+                          onClick={handleSaveApiKey}
+                          disabled={isValidating || !apiKey.trim()}
+                          className="w-full gap-2">
+                          {isValidating ? (
+                            <>
+                              <m.div
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: "linear"
+                                }}>
+                                <GearIcon size={18} weight="fill" />
+                              </m.div>
+                              Validando...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircleIcon size={18} weight="fill" />
+                              Salvar Token
+                            </>
+                          )}
+                        </Button>
+                      </m.div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-lg bg-accent/10 border border-accent/30 flex items-start gap-3">
+                        <CheckCircleIcon
+                          size={24}
+                          weight="fill"
+                          className="text-accent mt-0.5"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium">
+                            Integração configurada com sucesso!
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Suas 5 últimas tarefas do Todoist serão exibidas quando
+                            você for bloqueado em um site.
+                          </p>
+                        </div>
+                      </div>
+
+                      <m.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}>
+                        <Button
+                          onClick={handleRemoveApiKey}
+                          variant="destructive"
+                          className="w-full gap-2">
+                          <TrashIcon size={18} weight="fill" />
+                          Remover Integração
+                        </Button>
+                      </m.div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </m.div>
           </div>
         </m.div>
       </div>
@@ -445,12 +683,12 @@ function ManageBlockedUrls() {
   )
 }
 
-function ManageBlockedUrlsPage() {
+function SettingsPage() {
   return (
     <ErrorBoundary fallback={<div>Algo deu errado</div>}>
-      <ManageBlockedUrls />
+      <Settings />
     </ErrorBoundary>
   )
 }
 
-export default ManageBlockedUrlsPage
+export default SettingsPage

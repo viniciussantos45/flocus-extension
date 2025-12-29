@@ -10,6 +10,7 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@doist/todoist-api-typescript": "^6.1.6",
     "@fontsource-variable/fira-code": "^5.2.7",
     "@fontsource-variable/outfit": "^5.2.8",
     "@phosphor-icons/react": "^2.1.10",

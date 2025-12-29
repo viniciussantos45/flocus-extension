@@ -1,9 +1,11 @@
 import {
   BarbellIcon,
   BrainIcon,
+  CheckCircleIcon,
   CrosshairIcon,
   GearIcon,
   LightbulbFilamentIcon,
+  ListChecksIcon,
   RocketLaunchIcon,
   TimerIcon,
   XIcon
@@ -19,6 +21,7 @@ import "~/src/global.css"
 
 import logo from "data-base64:../../assets/logo.png"
 
+import { AddUrlDialog } from "~src/components/AddUrlDialog"
 import { Badge } from "~src/components/ui/badge"
 import { Button } from "~src/components/ui/button"
 import {
@@ -31,9 +34,9 @@ import {
 import { Label } from "~src/components/ui/label"
 import { Separator } from "~src/components/ui/separator"
 import { Textarea } from "~src/components/ui/textarea"
-import { AddUrlDialog } from "~src/components/AddUrlDialog"
 import { accessHistoryDB } from "~src/libs/access-history-db"
 import { getDomain } from "~src/libs/utils"
+import { todoistService, type TodoistTask } from "~src/services/todoist"
 
 import { sitesInfo, type SitesInfo } from "./sites-info"
 
@@ -48,6 +51,8 @@ function BlockContent() {
   const [blockedTime, setBlockedTime] = useState(0)
   const [todayBlocks, setTodayBlocks] = useState(0)
   const [isReady, setIsReady] = useState(false)
+  const [todoistTasks, setTodoistTasks] = useState<TodoistTask[]>([])
+  const [hasTodoistIntegration, setHasTodoistIntegration] = useState(false)
 
   // Enable dark mode by default
   useEffect(() => {
@@ -61,6 +66,23 @@ function BlockContent() {
     else window.addEventListener("load", onReady)
     return () => window.removeEventListener("load", onReady)
   }, [])
+
+  // Load Todoist tasks
+  useEffect(() => {
+    if (!isReady) return
+
+    const loadTodoistTasks = async () => {
+      const hasKey = await todoistService.hasApiKey()
+      setHasTodoistIntegration(hasKey)
+
+      if (hasKey) {
+        const tasks = await todoistService.getRecentTasks(5)
+        setTodoistTasks(tasks)
+      }
+    }
+
+    loadTodoistTasks()
+  }, [isReady])
 
   // Métricas + confetti
   useEffect(() => {
@@ -442,13 +464,12 @@ function BlockContent() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    window.location.href = chrome.runtime.getURL(
-                      "tabs/manage-blocked-urls.html"
-                    )
+                    window.location.href =
+                      chrome.runtime.getURL("tabs/settings.html")
                   }}
                   className="gap-2 shadow-md hover:shadow-lg transition-shadow">
                   <GearIcon size={16} weight="bold" />
-                  <span className="hidden sm:inline">Gerenciar</span>
+                  <span className="hidden sm:inline">Configurações</span>
                 </Button>
               </m.div>
 
@@ -544,8 +565,6 @@ function BlockContent() {
           {/* Main Grid */}
           <div className="grid lg:grid-cols-2 gap-8 items-start">
             {/* Esquerda */}
-
-            {/* Direita - Motivação com Dicas */}
             <m.div
               className="lg:sticky lg:top-12"
               variants={itemVariants}
@@ -937,6 +956,101 @@ function BlockContent() {
                   </CardContent>
                 </Card>
               </m.div>
+
+              {/* Todoist Tasks Card */}
+              {hasTodoistIntegration && todoistTasks.length > 0 && (
+                <m.div
+                  whileHover={{
+                    scale: 1.03,
+                    y: -8,
+                    boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.3)"
+                  }}
+                  transition={{
+                    type: "spring" as const,
+                    stiffness: 400,
+                    damping: 25
+                  }}
+                  className="rounded-xl mt-8">
+                  <Card className="border-2 border-border/50 transition-colors hover:border-accent/30">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center gap-3">
+                        <m.div
+                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center"
+                          animate={{
+                            rotate: [0, -6, 6, 0],
+                            scale: [1, 1.05, 1]
+                          }}
+                          transition={{
+                            duration: 4,
+                            repeat: Infinity,
+                            ease: "easeInOut" as const
+                          }}>
+                          <ListChecksIcon
+                            size={28}
+                            weight="fill"
+                            className="text-accent"
+                          />
+                        </m.div>
+                        <div>
+                          <CardTitle className="text-xl">
+                            Suas Tarefas
+                          </CardTitle>
+                          <CardDescription className="text-sm">
+                            Pendências do Todoist
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <ul className="space-y-3">
+                        {todoistTasks.map((task, index) => (
+                          <m.li
+                            key={task.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{
+                              delay: 0.6 + index * 0.1,
+                              type: "spring",
+                              stiffness: 200
+                            }}
+                            whileHover={{ x: 4, scale: 1.02 }}
+                            className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors border border-border/30 group cursor-default">
+                            <m.div
+                              className="flex-shrink-0 w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center mt-0.5"
+                              whileHover={{
+                                scale: 1.3,
+                                backgroundColor: "hsl(var(--accent))"
+                              }}>
+                              <CheckCircleIcon
+                                size={14}
+                                weight="bold"
+                                className="text-accent group-hover:text-accent-foreground transition-colors"
+                              />
+                            </m.div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium leading-relaxed break-words">
+                                {task.content}
+                              </p>
+                              {task.description && (
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                  {task.description}
+                                </p>
+                              )}
+                            </div>
+                            {task.priority > 1 && (
+                              <Badge
+                                variant="secondary"
+                                className="text-xs flex-shrink-0">
+                                P{task.priority}
+                              </Badge>
+                            )}
+                          </m.li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </m.div>
+              )}
             </m.div>
           </div>
         </m.div>
